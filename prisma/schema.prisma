@@ -1,0 +1,43 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Property {
+  id          String   @id @default(cuid())
+  title       String
+  price       Float
+  location    String
+  description String   @db.Text
+  videoUrl    String?
+  images      String[]
+  status      Status   @default(TIER_1_PENDING)
+  views       Int      @default(0) // 👈 ADD THIS LINE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  type      String   // "BUYER" or "LANDLORD"
+  location  String?
+  notes     String?
+  status    String   @default("NEW") // NEW, CONTACTED, VERIFIED, CLOSED
+  createdAt DateTime @default(now())
+}
+
+
+
+enum Status {
+  TIER_1_PENDING
+  VERIFIED
+  SOLD
+}
+
+

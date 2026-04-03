@@ -1,0 +1,42 @@
+:root {
+  --nav-bg: #1A232E;
+  --hero-bg: #F0FDF4;
+  --primary-green: #059669;
+  --text-dark: #1A232E;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--text-dark);
+  font-family: 'Inter', sans-serif;
+}
+
+.navbar-brand {
+  letter-spacing: -0.5px;
+}
+
+/* Card hover effect for a premium feel */
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.property-card {
+  transition: transform 0.3s ease, shadow 0.3s ease;
+}
+
+.property-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+
+.card-img-top {
+  transition: transform 0.5s ease;
+}
+
+.property-card:hover .card-img-top {
+  transform: scale(1.05);
+}
