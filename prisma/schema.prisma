@@ -40,4 +40,8 @@ enum Status {
   SOLD
 }
 
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"] // 👈 ADD THIS LINE
+}
 
