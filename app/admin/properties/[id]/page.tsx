@@ -2,20 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
 type MediaItem = {
-  id: string;
-  property_id: string;
-  file_url: string;
-  media_type: string;
-  created_at: string;
+  id: number;
+  propertyId: number;
+  fileUrl: string;
+  mediaType: string;
+  createdAt: string;
 };
+
+// Mock fetch function using Prisma (replace with real API call)
+async function fetchPropertyMedia(propertyId: number): Promise<MediaItem[]> {
+  const res = await fetch(`/api/propertyMedia?propertyId=${propertyId}`);
+  const data = await res.json();
+  return data;
+}
 
 export default function PropertyMediaPage() {
   const params = useParams<{ id: string }>();
-  const propertyId = params.id;
+  const propertyId = Number(params.id);
 
   const [images, setImages] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,78 +29,23 @@ export default function PropertyMediaPage() {
 
   useEffect(() => {
     if (!propertyId) return;
-    fetchImages();
-  }, [propertyId]);
 
-async function fetchImages() {
-  setLoading(true);
-  setFeedback("");
-
-  try {
-    const { data, error, status, statusText } = await supabase
-      .from("property_media")
-      .select("*")
-      .eq("property_id", propertyId);
-
-    console.log("MEDIA QUERY RESULT:", { data, error, status, statusText, propertyId });
-
-    if (error) {
-      console.error("MEDIA LOAD ERROR:", error);
-      setFeedback(
-        `Failed to load images. Status: ${status} ${statusText || ""}`.trim()
-      );
-      setLoading(false);
-      return;
-    }
-
-    setImages((data || []) as MediaItem[]);
-  } catch (err) {
-    console.error("MEDIA FETCH CRASH:", err);
-    setFeedback("Something went wrong while loading images.");
-  } finally {
-    setLoading(false);
-  }
-}
-
-  function extractStoragePath(url: string) {
-    const marker = "/storage/v1/object/public/property-media/";
-    const index = url.indexOf(marker);
-    if (index === -1) return null;
-    return url.substring(index + marker.length);
-  }
-
-  async function handleDelete(imageId: string, fileUrl: string) {
-    const confirmed = window.confirm("Delete this media file?");
-    if (!confirmed) return;
-
-    setFeedback("");
-
-    const path = extractStoragePath(fileUrl);
-
-    if (path) {
-      const { error: storageError } = await supabase.storage
-        .from("property-media")
-        .remove([path]);
-
-      if (storageError) {
-        console.error("STORAGE DELETE ERROR:", storageError);
+    async function loadImages() {
+      try {
+        setLoading(true);
+        setFeedback("");
+        const data = await fetchPropertyMedia(propertyId);
+        setImages(data);
+      } catch (err) {
+        console.error(err);
+        setFeedback("Failed to load images.");
+      } finally {
+        setLoading(false);
       }
     }
 
-    const { error: dbError } = await supabase
-      .from("property_media")
-      .delete()
-      .eq("id", imageId);
-
-    if (dbError) {
-      console.error("DB DELETE ERROR:", dbError);
-      setFeedback(dbError.message || "Failed to delete media.");
-      return;
-    }
-
-    setImages((prev) => prev.filter((item) => item.id !== imageId));
-    setFeedback("Media deleted successfully.");
-  }
+    loadImages();
+  }, [propertyId]);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -149,17 +100,17 @@ async function fetchImages() {
               className="overflow-hidden rounded-2xl border bg-white shadow-sm"
             >
               <img
-                src={img.file_url}
+                src={img.fileUrl}
                 alt="Property"
                 className="h-64 w-full object-cover"
               />
 
               <div className="space-y-3 p-4">
-                <p className="break-all text-xs text-slate-500">{img.file_url}</p>
-
+                <p className="break-all text-xs text-slate-500">{img.fileUrl}</p>
+                {/* Delete button will need an API route */}
                 <button
-                  onClick={() => handleDelete(img.id, img.file_url)}
                   className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
+                  onClick={() => alert("Implement delete via API")}
                 >
                   Delete Media
                 </button>

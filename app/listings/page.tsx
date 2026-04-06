@@ -11,7 +11,11 @@ export default async function ListingsPage() {
           <div className="col-md-4" key={p.id}>
             <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden card-hover">
               <div className="bg-secondary text-white d-flex align-items-center justify-content-center" style={{height: '200px'}}>
-                {p.imageUrl ? <img src={p.imageUrl} alt={p.title} /> : "Property Image"}
+                {p.images?.[0] ? (
+                  <img src={p.images[0]} alt={p.title} className="w-100 h-100" style={{ objectFit: 'cover' }} />
+                ) : (
+                  <div className="text-center">Property Image</div>
+                )}
               </div>
               <div className="p-4">
                 <div className="badge bg-success-subtle text-success mb-2">AGIS VERIFIED</div>

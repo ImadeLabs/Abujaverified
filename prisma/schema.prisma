@@ -20,17 +20,47 @@ model Property {
   views       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relations
+  dueDiligenceRequests DueDiligence[] // links to DueDiligence
+  media                PropertyMedia[] // links to PropertyMedia
+}
+
+model DueDiligence {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  status    String  @default("PENDING") // Add status field
+  adminNote String? // Add adminNote field
+
+  // Relation to Property
+  property   Property? @relation(fields: [propertyId], references: [id])
+  propertyId String?
 }
 
 model Lead {
   id        String   @id @default(cuid())
   name      String
   phone     String
-  type      String   // "BUYER" or "LANDLORD"
+  type      String // "BUYER" or "LANDLORD"
   location  String?
   notes     String?
   status    String   @default("NEW") // NEW, CONTACTED, VERIFIED, CLOSED
   createdAt DateTime @default(now())
+}
+
+model PropertyMedia {
+  id         Int      @id @default(autoincrement())
+  propertyId String
+  url        String
+  createdAt  DateTime @default(now())
+
+  // Relation to Property
+  property Property @relation(fields: [propertyId], references: [id])
 }
 
 enum Status {
