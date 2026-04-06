@@ -9,6 +9,7 @@ type UploadClientProps = {
 export default function UploadClient({ propertyId }: UploadClientProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [feedback, setFeedback] = useState("");
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
@@ -17,9 +18,66 @@ export default function UploadClient({ propertyId }: UploadClientProps) {
   }
 
   async function handleUpload() {
-    setFeedback(
-      "Image upload is currently disabled. This project is configured for Prisma-only usage, so upload behavior must be implemented with a Prisma-backed API route."
-    );
+    if (!files.length) {
+      setFeedback("Please select at least one image.");
+      return;
+    }
+
+    setUploading(true);
+    setFeedback("");
+
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append(
+          "upload_preset",
+          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+        );
+
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const data = await res.json();
+
+        if (!data.secure_url) {
+          throw new Error("Upload failed");
+        }
+
+        uploadedUrls.push(data.secure_url);
+      }
+
+      // 🔥 Send to your backend (Prisma)
+      await fetch("/api/propertyMedia", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyId,
+          images: uploadedUrls,
+        }),
+      });
+
+      setFeedback("Images uploaded successfully!");
+      setFiles([]);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      console.error(err);
+      setFeedback("Upload failed. Try again.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -54,9 +112,10 @@ export default function UploadClient({ propertyId }: UploadClientProps) {
 
       <button
         onClick={handleUpload}
-        className="rounded-xl bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800"
+        disabled={uploading}
+        className="rounded-xl bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800 disabled:opacity-50"
       >
-        Upload Images
+        {uploading ? "Uploading..." : "Upload Images"}
       </button>
 
       {feedback && <p className="mt-4 text-sm text-slate-700">{feedback}</p>}

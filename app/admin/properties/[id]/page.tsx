@@ -6,22 +6,28 @@ import Link from "next/link";
 
 type MediaItem = {
   id: number;
-  propertyId: number;
+  propertyId: string; // ✅ FIXED (was number)
   fileUrl: string;
   mediaType: string;
   createdAt: string;
 };
 
-// Mock fetch function using Prisma (replace with real API call)
-async function fetchPropertyMedia(propertyId: number): Promise<MediaItem[]> {
-  const res = await fetch(`/api/propertyMedia?propertyId=${propertyId}`);
-  const data = await res.json();
-  return data;
+// Fetch media from your API
+async function fetchPropertyMedia(propertyId: string): Promise<MediaItem[]> {
+  const res = await fetch(`/api/propertyMedia?propertyId=${propertyId}`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch media");
+  }
+
+  return res.json();
 }
 
 export default function PropertyMediaPage() {
   const params = useParams<{ id: string }>();
-  const propertyId = Number(params.id);
+  const propertyId = params.id; // ✅ FIXED (no Number())
 
   const [images, setImages] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +40,7 @@ export default function PropertyMediaPage() {
       try {
         setLoading(true);
         setFeedback("");
+
         const data = await fetchPropertyMedia(propertyId);
         setImages(data);
       } catch (err) {
@@ -55,7 +62,9 @@ export default function PropertyMediaPage() {
             <h1 className="text-3xl font-bold text-slate-900">
               Property Media Manager
             </h1>
-            <p className="mt-2 text-slate-600">Manage pictures for this listing.</p>
+            <p className="mt-2 text-slate-600">
+              Manage pictures for this listing.
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -106,11 +115,13 @@ export default function PropertyMediaPage() {
               />
 
               <div className="space-y-3 p-4">
-                <p className="break-all text-xs text-slate-500">{img.fileUrl}</p>
-                {/* Delete button will need an API route */}
+                <p className="break-all text-xs text-slate-500">
+                  {img.fileUrl}
+                </p>
+
                 <button
                   className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
-                  onClick={() => alert("Implement delete via API")}
+                  onClick={() => alert("Delete API coming next")}
                 >
                   Delete Media
                 </button>
