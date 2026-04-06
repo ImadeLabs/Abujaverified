@@ -54,7 +54,7 @@ export default function UploadClient({ propertyId }: UploadClientProps) {
         uploadedUrls.push(data.secure_url);
       }
 
-      // 🔥 Send to your backend (Prisma)
+      //  Send to your backend (Prisma)
       await fetch("/api/propertyMedia", {
         method: "POST",
         headers: {
